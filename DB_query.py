@@ -24,6 +24,15 @@ def DB_query(query: str, values=None):  # master function for DB interaction
             cnx.close()
             return {"status": cur.rowcount, "ID": cur.lastrowid}
 
+        if query[:6] == "UPDATE":
+            cur.execute(query, values)
+            cnx.commit()
+            cnx.close()
+            if cur.rowcount == 0:
+                return {"status": 0}
+
+            return {"status": 1}
+
         return {"status": 0}
     except mysql.connector.Error as err:
         print(err)
