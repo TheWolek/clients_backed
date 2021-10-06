@@ -61,6 +61,18 @@ def deleteOneProc(ID):
     return Response(json.dumps({"ID": ID}), status=200, mimetype='application/json')
 
 
+@ proc_BP.route("/delete-all/<CID>", methods=["DELETE"])
+def deleteProcs(CID):
+    sql = "DELETE FROM proc WHERE CID = %s"
+    val = (CID, )
+    res = DB_query(sql, val)
+
+    if res["status"] == 0:  # if nothing was deleted
+        return Response("{'err_msg':'procedures with provided CID was not found'}", status=406, mimetype='application/json')
+
+    return Response(json.dumps({"CID": CID}), status=200, mimetype='application/json')
+
+
 @ proc_BP.route("/", methods=["PUT"])
 def updateOneProc():
     req = request.json
