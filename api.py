@@ -32,13 +32,20 @@ def userRegister():
     # check if login already exists
     sql = "SELECT login FROM creds WHERE login = '" + newUser["login"] + "'"
     res = DB_query(sql)
-    if res != []:  # if so throw error
+
+    if res["status"] != 1:  # if returned status is wrong
+        return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
+
+    if res["data"] != []:  # if login exists throw error
         return Response("{'err_msg':'account with that login already exists. Please log in'}", status=406, mimetype='application/json')
 
     # instert user data to DB
     sql = "INSERT INTO creds (login, pass) VALUES (%s, %s)"
     val = (newUser["login"], newUser["password"])
     res = DB_query(sql, val)
+
+    if res["status"] != 1:  # if returned status is wrong
+        return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
 
     # OK, user created
     return Response(status=201, mimetype='application/json')
@@ -58,7 +65,11 @@ def userLogin():
     # check if login exists in DB
     res = DB_query("SELECT login FROM creds WHERE login = '" +
                    req["login"] + "'")
-    if res == []:  # if no throw error
+
+    if res["status"] != 1:  # if returned status is wrong
+        return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
+
+    if res["data"] == []:  # if no throw error
         return Response("{'err_msg': 'wrong login or password'}", status=401, mimetype='application/json')
 
     # body data parsing
@@ -67,8 +78,11 @@ def userLogin():
     fetchedHash = DB_query(
         "SELECT pass FROM creds WHERE login = '" + req["login"] + "'")
 
+    if fetchedHash["status"] != 1:  # if returned status is wrong
+        return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
+
     # wrong password
-    if not EnteredHash.hexdigest() == fetchedHash[0]["pass"]:
+    if not EnteredHash.hexdigest() == fetchedHash["data"][0]["pass"]:
         return Response("{'err_msg': 'wrong login or password'}", status=401, mimetype='application/json')
 
     # OK, user is loged in
@@ -106,7 +120,10 @@ def findClient(client_name):
         client_name + "%'"
     res = DB_query(sql)
 
-    return Response(json.dumps({"data": res}), status=200, mimetype='application/json')
+    if res["status"] != 1:  # if returned status is wrong
+        return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
+
+    return Response(json.dumps({"data": res["data"]}), status=200, mimetype='application/json')
 
 # delete client
 
@@ -117,7 +134,10 @@ def deleteClient(CID: int):
     sql = "SELECT id FROM clients WHERE ID=" + CID
     res = DB_query(sql)
 
-    if res == []:
+    if res["status"] != 1:  # if returned status is wrong
+        return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
+
+    if res["data"] == []:
         return Response("{'err_msg':'no client was found'}", status=404, mimetype='application/json')
 
     sql = "DELETE FROM clients WHERE id=%s"
@@ -142,7 +162,10 @@ def createProc():
     sql = "SELECT id FROM clients WHERE id = " + str(req["CID"])
     res = DB_query(sql)
 
-    if res == []:
+    if res["status"] != 1:  # if returned status is wrong
+        return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
+
+    if res["data"] == []:
         return Response("{'err_msg':'no client found'}", status=406, mimetype='application/json')
 
     sql = "INSERT INTO proc (CID, description) VALUES (%s, %s)"
@@ -153,6 +176,12 @@ def createProc():
         return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
 
     return Response(json.dumps({"ID": res["ID"]}), status=200, mimetype='application/json')
+
+
+@ api.route("/proc/<CID>", methods=["GET"])
+def findClientProc(CID):
+
+    return Response(status=200, mimetype='application/json')
 
 
 if __name__ == "__main__":

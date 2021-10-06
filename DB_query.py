@@ -10,7 +10,7 @@ def DB_query(query: str, values=None):  # master function for DB interaction
         if query[:6] == "SELECT":
             cur.execute(query)
             cnx.close()
-            return cur.fetchall()
+            return {"status": 1, "data": cur.fetchall()}
 
         if query[:6] == "DELETE":
             cur.execute(query, values)
@@ -24,5 +24,6 @@ def DB_query(query: str, values=None):  # master function for DB interaction
             cnx.close()
             return {"status": cur.rowcount, "ID": cur.lastrowid}
 
+        return {"status": 0}
     except mysql.connector.Error as err:
         print(err)
