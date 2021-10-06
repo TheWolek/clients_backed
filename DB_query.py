@@ -8,7 +8,7 @@ def DB_query(query: str, values=None):  # master function for DB interaction
         cur = cnx.cursor(dictionary=True)
 
         if query[:6] == "SELECT":
-            cur.execute(query)
+            cur.execute(query, values)
             cnx.close()
             return {"status": 1, "data": cur.fetchall()}
 

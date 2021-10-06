@@ -30,8 +30,9 @@ def userRegister():
     }
 
     # check if login already exists
-    sql = "SELECT login FROM creds WHERE login = '" + newUser["login"] + "'"
-    res = DB_query(sql)
+    sql = "SELECT login FROM creds WHERE login = %s"
+    val = (newUser["login"],)
+    res = DB_query(sql, val)
 
     if res["status"] != 1:  # if returned status is wrong
         return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
@@ -63,8 +64,9 @@ def userLogin():
         return Response("{'err_msg':'login or password is missing'}", status=406, mimetype='application/json')
 
     # check if login exists in DB
-    res = DB_query("SELECT login FROM creds WHERE login = '" +
-                   req["login"] + "'")
+    sql = "SELECT login FROM creds WHERE login = %s"
+    val = (req["login"],)
+    res = DB_query(sql, val)
 
     if res["status"] != 1:  # if returned status is wrong
         return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
@@ -75,8 +77,9 @@ def userLogin():
     # body data parsing
     EnteredHash = hashlib.md5(req["password"].encode())
     # check if password matches
-    fetchedHash = DB_query(
-        "SELECT pass FROM creds WHERE login = '" + req["login"] + "'")
+    sql = "SELECT pass FROM creds WHERE login = %s"
+    val = (req["login"],)
+    fetchedHash = DB_query(sql, val)
 
     if fetchedHash["status"] != 1:  # if returned status is wrong
         return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
@@ -116,9 +119,10 @@ def clientAdd():
 # fetch client data by name
 @ api.route("/client/<client_name>", methods=["GET"])
 def findClient(client_name):
-    sql = "SELECT id, imie_Nazwisko FROM clients WHERE imie_Nazwisko like '%" + \
-        client_name + "%'"
-    res = DB_query(sql)
+    client_name = "%"+client_name+"%"
+    sql = "SELECT id, imie_Nazwisko FROM clients WHERE imie_Nazwisko like %s"
+    val = (client_name, )
+    res = DB_query(sql, val)
 
     if res["status"] != 1:  # if returned status is wrong
         return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
@@ -131,8 +135,9 @@ def findClient(client_name):
 @ api.route("/client/<CID>", methods=["DELETE"])
 def deleteClient(CID: int):
     # check if user exists
-    sql = "SELECT id FROM clients WHERE ID=" + CID
-    res = DB_query(sql)
+    sql = "SELECT id FROM clients WHERE ID=%s"
+    val = (CID,)
+    res = DB_query(sql, val)
 
     if res["status"] != 1:  # if returned status is wrong
         return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
@@ -159,8 +164,9 @@ def createProc():
     if req["desc"] == "":
         return Response("{'err_msg':'description can not be empty'}", status=406, mimetype='application/json')
 
-    sql = "SELECT id FROM clients WHERE id = " + str(req["CID"])
-    res = DB_query(sql)
+    sql = "SELECT id FROM clients WHERE id = %s"
+    val = (str(req["CID"]),)
+    res = DB_query(sql, val)
 
     if res["status"] != 1:  # if returned status is wrong
         return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
