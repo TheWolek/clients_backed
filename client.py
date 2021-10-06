@@ -54,3 +54,18 @@ def deleteClient(CID: int):
         return Response("{'err_msg':'client with provided ID was not found'}", status=406, mimetype='application/json')
 
     return Response(json.dumps({"CID": CID}), status=200, mimetype='application/json')
+
+
+@ client_BP.route("/", methods=["PUT"])  # edit client
+def updateClient():
+    req = request.json
+    imie_Nazwisko = req["imie_Nazwisko"].lower()
+
+    sql = """UPDATE clients SET imie_Nazwisko = %s WHERE id = %s"""
+    val = (imie_Nazwisko, req["id"])
+    res = DB_query(sql, val)
+
+    if res["status"] == 0:  # if nothing was updated
+        return Response("{'err_msg':'client with provided ID was not found or value has not changed'}", status=406, mimetype='application/json')
+
+    return Response(json.dumps({"CID": req["id"], "imie_Nazwisko": req["imie_Nazwisko"]}), status=200, mimetype='application/json')

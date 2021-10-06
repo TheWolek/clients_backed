@@ -72,8 +72,6 @@ def updateOneProc():
     val = (req["desc"], req["id"])
     res = DB_query(sql, val)
 
-    print(res)
-
     if res["status"] == 0:  # if nothing was updated
         return Response("{'err_msg':'procedure with provided ID was not found or value has not changed'}", status=406, mimetype='application/json')
 
