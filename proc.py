@@ -39,5 +39,11 @@ def createProc():
 
 @ proc_BP.route("/<CID>", methods=["GET"])
 def findClientProc(CID):
+    sql = "SELECT id, description FROM proc WHERE CID = %s"
+    val = (str(CID), )
+    res = DB_query(sql, val)
 
-    return Response(status=200, mimetype='application/json')
+    if res["status"] != 1:
+        return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
+
+    return Response(json.dumps(res["data"]), status=200, mimetype='application/json')
