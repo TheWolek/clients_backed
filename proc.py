@@ -59,3 +59,22 @@ def deleteOneProc(ID):
         return Response("{'err_msg':'procedure with provided ID was not found'}", status=406, mimetype='application/json')
 
     return Response(json.dumps({"ID": ID}), status=200, mimetype='application/json')
+
+
+@ proc_BP.route("/", methods=["PUT"])
+def updateOneProc():
+    req = request.json
+
+    if "desc" not in req:
+        return Response("{'err_msg':'description is required'}", status=406, mimetype='application/json')
+
+    sql = """UPDATE proc SET description = %s WHERE id = %s"""
+    val = (req["desc"], req["id"])
+    res = DB_query(sql, val)
+
+    print(res)
+
+    if res["status"] == 0:  # if nothing was updated
+        return Response("{'err_msg':'procedure with provided ID was not found or value has not changed'}", status=406, mimetype='application/json')
+
+    return Response(json.dumps({"ID": req["id"], "desc": req["desc"]}), status=200, mimetype='application/json')
