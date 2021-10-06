@@ -47,21 +47,10 @@ def findClient(client_name):
 
 @ client_BP.route("/<CID>", methods=["DELETE"])  # delete client
 def deleteClient(CID: int):
-    # check if user exists
-    sql = "SELECT id FROM clients WHERE ID=%s"
-    val = (CID,)
-    res = DB_query(sql, val)
-
-    if res["status"] != 1:  # if returned status is wrong
-        return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
-
-    if res["data"] == []:
-        return Response("{'err_msg':'no client was found'}", status=404, mimetype='application/json')
-
     sql = "DELETE FROM clients WHERE id=%s"
     res = DB_query(sql, (CID,))
 
-    if res["status"] != 1:
-        return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
+    if res["status"] != 1:  # nothing was deleted
+        return Response("{'err_msg':'client with provided ID was not found'}", status=406, mimetype='application/json')
 
     return Response(json.dumps({"CID": CID}), status=200, mimetype='application/json')
