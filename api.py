@@ -18,12 +18,19 @@ def DB_query(query: str, values=None):  # master function for DB interaction
         cnx = mysql.connector.connect(
             user='root', password='132', host='localhost', database='clients')
         cur = cnx.cursor(dictionary=True)
-        if values == None:
-            # print(query)
+
+        if query[:6] == "SELECT":
             cur.execute(query)
             cnx.close()
             return cur.fetchall()
-        else:
+
+        if query[:6] == "DELETE":
+            cur.execute(query, values)
+            cnx.commit()
+            cnx.close()
+            return {"status": cur.rowcount}
+
+        if query[:6] == "INSERT":
             cur.execute(query, values)
             cnx.commit()
             cnx.close()
@@ -124,12 +131,31 @@ def clientAdd():
 # fetch client data by name
 @ api.route("/client/<client_name>", methods=["GET"])
 def findClient(client_name):
-    sql = "SELECT ID, imie_Nazwisko FROM clients WHERE imie_Nazwisko like '%" + \
+    sql = "SELECT id, imie_Nazwisko FROM clients WHERE imie_Nazwisko like '%" + \
         client_name + "%'"
     res = DB_query(sql)
-    print(res)
 
     return Response(json.dumps({"data": res}), status=200, mimetype='application/json')
+
+# delete client
+
+
+@ api.route("/client/<CID>", methods=["DELETE"])
+def deleteClient(CID: int):
+    # check if user exists
+    sql = "SELECT id FROM clients WHERE ID=" + CID
+    res = DB_query(sql)
+
+    if res == []:
+        return Response("{'err_msg':'no client was found'}", status=404, mimetype='application/json')
+
+    sql = "DELETE FROM clients WHERE id=%s"
+    res = DB_query(sql, (CID,))
+
+    if res["status"] != 1:
+        return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
+
+    return Response(json.dumps({"CID": CID}), status=200, mimetype='application/json')
 
 
 if __name__ == "__main__":
