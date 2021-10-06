@@ -43,7 +43,19 @@ def findClientProc(CID):
     val = (str(CID), )
     res = DB_query(sql, val)
 
-    if res["status"] != 1:
+    if res["status"] != 1:  # if returned status is wrong
         return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
 
     return Response(json.dumps(res["data"]), status=200, mimetype='application/json')
+
+
+@ proc_BP.route("/<ID>", methods=["DELETE"])
+def deleteOneProc(ID):
+    sql = "DELETE FROM proc WHERE id = %s"
+    val = (ID, )
+    res = DB_query(sql, val)
+
+    if res["status"] != 1:  # if nothing was deleted
+        return Response("{'err_msg':'procedure with provided id was not found'}", status=406, mimetype='application/json')
+
+    return Response(json.dumps({"ID": ID}), status=200, mimetype='application/json')
