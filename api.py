@@ -129,5 +129,31 @@ def deleteClient(CID: int):
     return Response(json.dumps({"CID": CID}), status=200, mimetype='application/json')
 
 
+@ api.route("/proc", methods=["POST"])
+def createProc():
+    req = request.json
+
+    if "CID" not in req or "desc" not in req:
+        return Response("{'err_msg':'CID and description are required'}", status=406, mimetype='application/json')
+
+    if req["desc"] == "":
+        return Response("{'err_msg':'description can not be empty'}", status=406, mimetype='application/json')
+
+    sql = "SELECT id FROM clients WHERE id = " + str(req["CID"])
+    res = DB_query(sql)
+
+    if res == []:
+        return Response("{'err_msg':'no client found'}", status=406, mimetype='application/json')
+
+    sql = "INSERT INTO proc (CID, description) VALUES (%s, %s)"
+    val = (str(req["CID"]), req["desc"])
+    res = DB_query(sql, val)
+
+    if res["status"] != 1:
+        return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
+
+    return Response(json.dumps({"ID": res["ID"]}), status=200, mimetype='application/json')
+
+
 if __name__ == "__main__":
     api.run()
