@@ -73,7 +73,7 @@ def deleteProcs(CID):
     return Response(json.dumps({"CID": CID}), status=200, mimetype='application/json')
 
 
-@ proc_BP.route("/", methods=["PUT"])
+@ proc_BP.route("/", methods=["PATCH"])
 def updateOneProc():
     req = request.json
 

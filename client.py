@@ -56,7 +56,7 @@ def deleteClient(CID: int):
     return Response(json.dumps({"CID": CID}), status=200, mimetype='application/json')
 
 
-@ client_BP.route("/", methods=["PUT"])  # edit client
+@ client_BP.route("/", methods=["PATCH"])  # edit client
 def updateClient():
     req = request.json
     imie_Nazwisko = req["imie_Nazwisko"].lower()
