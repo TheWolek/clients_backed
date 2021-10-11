@@ -77,6 +77,22 @@ def checkUserToken(UID):
     return False
 
 
+def TokenValidation(enteredToken):
+    sql = "SELECT user_id, token FROM user_tokens WHERE token = %s"
+    res = DB_query(sql, (enteredToken,))
+
+    if res["status"] != 1:  # if returned status is wrong
+        return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
+
+    if res["data"] == []:
+        return {"status": False}
+
+    if res["data"][0]["token"] != enteredToken:
+        return {"status": False}
+
+    return {"status": True, "UID": res["data"][0]["user_id"]}
+
+
 @ user_BP.route("/login", methods=["POST"])  # user log in
 def userLogIn():
     req = request.json
@@ -120,3 +136,28 @@ def userLogIn():
     token = userCreateToken(res["data"][0]["id"])
 
     return Response(json.dumps({"login": req["login"], "token": token}), status=200, mimetype='application/json')
+
+
+@ user_BP.route("/logout", methods=["POST"])  # user log out
+def userLogOut():
+    req = request.json
+
+    if "token" not in req:
+        return Response("{'err_msg':'bad request'}", status=400, mimetype='application/json')
+
+    if req["token"] == "":
+        return Response("{'err_msg': 'token is required'}", status=400, mimetype='application/json')
+
+    tokenValid = TokenValidation(req["token"])
+
+    if not tokenValid["status"]:
+        return Response("{'err_msg': 'wrong token'}", status=401, mimetype='application/json')
+
+    UID = tokenValid["UID"]
+    sql = "DELETE FROM user_tokens WHERE user_id=%s"
+    res = DB_query(sql, (UID,))
+
+    if res["status"] != 1:  # if returned status is wrong
+        return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
+
+    return Response(json.dumps({"UID": UID}), status=200, mimetype='application/json')
