@@ -2,6 +2,8 @@ from flask import Flask, request, Response
 from flask.blueprints import Blueprint
 import hashlib
 import json
+import random
+import string
 
 from DB_query import DB_query
 
@@ -49,8 +51,34 @@ def userRegister():
     return Response(status=201, mimetype='application/json')
 
 
+def userCreateToken(UID):
+
+    token = ''.join(random.SystemRandom().choice(
+        string.ascii_uppercase + string.digits) for _ in range(128))
+    sql = "INSERT INTO user_tokens (user_id, token) VALUES (%s,%s)"
+    res = DB_query(sql, (UID, token))
+
+    if res["status"] != 1:  # if returned status is wrong
+        return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
+
+    return {"UID": UID, "token": token}
+
+
+def checkUserToken(UID):
+    sql = "SELECT user_id FROM user_tokens WHERE user_id = %s"
+    res = DB_query(sql, (UID,))
+
+    if res["status"] != 1:  # if returned status is wrong
+        return Response("{'err_msg':'DB error'}", status=500, mimetype='application/json')
+
+    if res["data"] != []:
+        return True
+
+    return False
+
+
 @ user_BP.route("/login", methods=["POST"])  # user log in
-def userLogin():
+def userLogIn():
     req = request.json
 
     # body validation
@@ -61,7 +89,7 @@ def userLogin():
         return Response("{'err_msg':'login or password is missing'}", status=406, mimetype='application/json')
 
     # check if login exists in DB
-    sql = "SELECT login FROM creds WHERE login = %s"
+    sql = "SELECT id, login FROM creds WHERE login = %s"
     val = (req["login"],)
     res = DB_query(sql, val)
 
@@ -86,4 +114,9 @@ def userLogin():
         return Response("{'err_msg': 'wrong login or password'}", status=401, mimetype='application/json')
 
     # OK, user is loged in
-    return Response(json.dumps({"login": req["login"]}), status=200, mimetype='application/json')
+    if checkUserToken(res["data"][0]["id"]):
+        return Response("{'err_msg': 'token error'}", status=401, mimetype='application/json')
+
+    token = userCreateToken(res["data"][0]["id"])
+
+    return Response(json.dumps({"login": req["login"], "token": token}), status=200, mimetype='application/json')
